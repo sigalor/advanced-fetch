@@ -5,7 +5,7 @@ A version of node-fetch with more convenient functionality.
 ## Usage
 
 ```javascript
-const { Fetch } = require("fetch-with-cookies");
+const { Fetch } = require("advanced-fetch");
 
 (async () => {
   const fetch = await new Fetch();
