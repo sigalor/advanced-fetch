@@ -7,6 +7,7 @@ const FormData = require("form-data");
 const { URLSearchParams } = require("url");
 const querystring = require("querystring");
 const iconv = require("iconv-lite");
+const https = require("https");
 
 CookieJar.deserialize = util.promisify(CookieJar.deserialize);
 
@@ -17,9 +18,23 @@ function promisifyCookieJar(jar) {
 }
 
 class Fetch {
-  constructor({ cookiesFilename, encoding } = {}) {
+  constructor({
+    cookiesFilename,
+    encoding,
+    commonFetchParams,
+    ignoreInvalidHttps,
+  } = {}) {
+    if (ignoreInvalidHttps) {
+      commonFetchParams = {
+        ...commonFetchParams,
+        agent: new https.Agent({ rejectUnauthorized: false }),
+      };
+    }
+
     this.cookiesFilename = cookiesFilename;
     this.encoding = encoding;
+    this.commonFetchParams = commonFetchParams;
+
     return (async () => {
       if (this.cookiesFilename && (await fs.exists(this.cookiesFilename)))
         this.jar = promisifyCookieJar(
@@ -49,9 +64,14 @@ class Fetch {
       delete params.form;
     } else if (params.formData) {
       const form = new FormData();
+      const appendToForm = (k, v) => {
+        if (typeof v === "object") form.append(k, v.value, v.options);
+        else form.append(k, v.toString());
+      };
+
       for (const [k, v] of Object.entries(params.formData)) {
-        if (typeof v === "string") form.append(k, v);
-        else form.append(k, v.value, v.options);
+        if (Array.isArray(v)) v.forEach((vItem) => appendToForm(k, vItem));
+        else appendToForm(k, v);
       }
       params.body = form;
       delete params.formData;
@@ -62,7 +82,10 @@ class Fetch {
     }
 
     // execute request and store cookies if cookieFilename was given in constructor
-    const resp = await this.fetch(url + queryStr, params);
+    const resp = await this.fetch(url + queryStr, {
+      ...params,
+      ...this.commonFetchParams,
+    });
     if (resp.status >= 500)
       throw new Error(resp.status + " " + resp.statusText);
     await this.storeCookies();
@@ -81,7 +104,7 @@ class Fetch {
     };
   }
 
-  async request(url, params = {}) {
+  async requestWithFullResponse(url, params = {}) {
     // only let node-fetch follow redirects if that's explicitly stated
     if (params.redirect === "follow")
       return (await this.requestWithHeaders(url, params)).content;
@@ -102,7 +125,11 @@ class Fetch {
       params = { method: "GET" };
     }
 
-    return currResp.content;
+    return currResp;
+  }
+
+  async request(url, params = {}) {
+    return (await this.requestWithFullResponse(url, params)).content;
   }
 
   get(url, params = {}) {
@@ -126,6 +153,14 @@ class Fetch {
     await fs.writeJSON(this.cookiesFilename, await this.jar.serialize(), {
       spaces: 4,
     });
+  }
+
+  async getCookie(key) {
+    const cookie = (await this.jar.serialize()).cookies.find(
+      (c) => c.key === key
+    );
+    if (!cookie) return;
+    return cookie.value;
   }
 }
 
