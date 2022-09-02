@@ -65,6 +65,7 @@ class Fetch {
     } else if (params.formData) {
       const form = new FormData();
       const appendToForm = (k, v) => {
+        if (Array.isArray(v)) v.forEach((x) => form.append(k, x.toString()));
         if (typeof v === "object") form.append(k, v.value, v.options);
         else form.append(k, v.toString());
       };
@@ -91,11 +92,12 @@ class Fetch {
     await this.storeCookies();
 
     // if an encoding was given in the Fetch constructur, the response still needs to be converted from that to UTF-8
-    let content = await (params.returnBuffer || this.encoding
+    let encoding = params.encoding || this.encoding;
+    let content = await (params.returnBuffer || encoding
       ? resp.buffer()
       : resp.text());
-    if (!params.returnBuffer && this.encoding)
-      content = iconv.decode(content, this.encoding);
+    if (!params.returnBuffer && encoding)
+      content = iconv.decode(content, encoding);
 
     return {
       status: resp.status,
