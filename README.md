@@ -1,6 +1,6 @@
 # advanced-fetch
 
-[![GitHub license](https://img.shields.io/github/license/sigalor/advanced-fetch)](https://github.com/sigalor/advanced-fetch/blob/master/LICENSE) [![npm](https://img.shields.io/npm/v/advanced-fetch)](https://www.npmjs.com/package/advanced-fetch)
+[![GitHub license](https://img.shields.io/github/license/sigalor/advanced-fetch)](https://github.com/sigalor/advanced-fetch/blob/master/LICENSE) [![npm](https://img.shields.io/npm/v/advanced-fetch)](https://www.npmjs.com/package/advanced-fetch) [![Unit tests workflow status](https://github.com/sigalor/advanced-fetch/actions/workflows/tests.yaml/badge.svg)](https://github.com/sigalor/advanced-fetch/actions/workflows/tests.yaml)
 
 A version of node-fetch with more convenient functionality.
 
@@ -16,7 +16,7 @@ npm install advanced-fetch
 const { Fetch } = require("advanced-fetch");
 
 (async () => {
-  const fetch = await new Fetch();
+  const fetch = new Fetch();
   await fetch.get("http://example.com");
   // subsequent requests to example.com now send the received
   // cookies again, and the cookies are updated automatically
