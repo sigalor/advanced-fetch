@@ -1,6 +1,14 @@
 # advanced-fetch
 
+[![GitHub license](https://img.shields.io/github/license/sigalor/advanced-fetch)](https://github.com/sigalor/advanced-fetch/blob/master/LICENSE) [![npm](https://img.shields.io/npm/v/advanced-fetch)](https://www.npmjs.com/package/advanced-fetch)
+
 A version of node-fetch with more convenient functionality.
+
+## Installation
+
+```
+npm install advanced-fetch
+```
 
 ## Usage
 
@@ -34,3 +42,7 @@ Additionally, you can specify the following parameters as normal JavaScript obje
 - `json` for the body of a `Content-Type: application/json` request, internally serialized using `JSON.stringify`
 
 Finally, you can specify `returnBuffer: true` in the parameters object in order to get a Node.js `Buffer` as the result of a request instead of a string.
+
+## License
+
+MIT
