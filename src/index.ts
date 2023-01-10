@@ -1,6 +1,6 @@
 import util from 'util';
 import fs from 'fs-extra';
-import nodeFetch from 'node-fetch';
+import nodeFetch from 'node-fetch-commonjs';
 import { CookieJar } from 'tough-cookie';
 import fetchCookie from 'fetch-cookie';
 import FormData from 'form-data';
@@ -164,6 +164,7 @@ export default class Fetch {
 
     // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
     let nextUrl = url;
+    let currOrigin = new URL(url).origin;
     let currResp: AdvancedFetchResponse;
     const manuallyFollowedUrls = [url];
     params = { ...params, redirect: 'manual' };
@@ -176,6 +177,11 @@ export default class Fetch {
       const loc = currResp.headers.location;
       if (!loc || (Array.isArray(loc) && loc.length !== 1)) break;
       nextUrl = Array.isArray(loc) ? loc[0] : loc;
+
+      // make sure nextUrl is absolute (if it is, set is as the new origin, otherwise use the same origin like before)
+      if (nextUrl.startsWith('/')) nextUrl = currOrigin + nextUrl;
+      else currOrigin = new URL(nextUrl).origin;
+
       manuallyFollowedUrls.push(nextUrl);
       params = { method: 'GET' };
     }
