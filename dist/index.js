@@ -99,17 +99,19 @@ class Fetch {
         if (params.returnType === 'json' ||
             (((_a = resp.headers.get('content-type')) === null || _a === void 0 ? void 0 : _a.startsWith('application/json')) &&
                 params.returnType !== 'buffer' &&
-                params.returnType !== 'string'))
+                params.returnType !== 'string')) {
             content = JSON.parse(content);
+        }
         return {
+            urls: url === resp.url ? [url] : [url, resp.url],
             status: resp.status,
             headers: resp.headers.raw(),
             content,
         };
     }
     async requestWithFullResponse(url, params = {}) {
-        if (!params.redirect || params.redirect === 'followWithCookies') {
-            // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
+        if (params.redirect === 'followWithCookies') {
+            // otherwise follow them manually, in order to also save the cookies set via Set-Cookie by intermediate redirects in the cookie jar
             let nextUrl = url;
             let currOrigin = new URL(url).origin;
             let currResp;
@@ -133,11 +135,11 @@ class Fetch {
                 manuallyFollowedUrls.push(nextUrl);
                 params = { method: 'GET' };
             }
-            return { urls: manuallyFollowedUrls, ...currResp };
+            if (currResp.urls[currResp.urls.length - 1] !== manuallyFollowedUrls[manuallyFollowedUrls.length - 1])
+                manuallyFollowedUrls.push(currResp.urls[currResp.urls.length - 1]);
+            return { ...currResp, urls: manuallyFollowedUrls };
         }
-        else {
-            return await this.requestWithHeaders(url, params);
-        }
+        return await this.requestWithHeaders(url, params);
     }
     async request(url, params = {}) {
         return (await this.requestWithFullResponse(url, params)).content;

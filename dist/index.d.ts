@@ -30,7 +30,7 @@ interface AdvancedFetchRequestParams {
     method?: string;
 }
 interface AdvancedFetchResponse {
-    urls?: string[];
+    urls: string[];
     status: number;
     headers: {
         [key: string]: string;
