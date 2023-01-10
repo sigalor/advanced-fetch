@@ -1,3 +1,7 @@
+# 2.2.0 (2023-01-10)
+
+- add AdvancedFetchResponse.urls with list of redirected URLs
+
 # 2.1.0 (2023-01-10)
 
 - update NPM dependencies
