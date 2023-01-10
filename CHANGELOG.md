@@ -1,3 +1,9 @@
+# 3.0.0 (2023-01-10)
+
+- upgrade to node-fetch@3 via [node-fetch-commonjs](https://www.npmjs.com/package/node-fetch-commonjs)
+- introduce new redirect mode called `followWithCookies` which is the default and where the redirects respect cookies
+- change `returnBuffer: true` to `returnType: "buffer"`, with the following possible values for `returnType`: string (default), buffer, json (actual default when response has `Content-Type: application/json`)
+
 # 2.2.1 (2023-01-10)
 
 - rebuild library
