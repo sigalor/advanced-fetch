@@ -1,3 +1,7 @@
+# 3.1.1 (2023-01-10)
+
+- also export all types and interfaces for TypeScript
+
 # 3.1.0 (2023-01-10)
 
 - do not use any default redirect mode anymore, i.e. use the default behavior of node-fetch in case nothing else is mentioned
