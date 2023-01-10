@@ -8,6 +8,10 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
+app.get('/redirect', (req, res) => {
+  res.redirect(301, '/');
+});
+
 export async function startServer(port: number): Promise<void> {
   return new Promise(resolve => {
     if (server) {
