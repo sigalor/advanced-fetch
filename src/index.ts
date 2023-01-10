@@ -68,7 +68,8 @@ interface AdvancedFetchRequestParams {
 
 interface AdvancedFetchResponse {
   // list of URLs that were followed to get to this response (only set when params.redirect was "manual") with the one of the final response last
-  urls?: string[];
+  // otherwise, this contains either one URL (if no redirects were followed) or two URLs (if a redirect was followed)
+  urls: string[];
 
   // when following redirects, the following properties only refer to the last, final response
   status: number;
@@ -158,10 +159,12 @@ export default class Fetch {
       (resp.headers.get('content-type')?.startsWith('application/json') &&
         params.returnType !== 'buffer' &&
         params.returnType !== 'string')
-    )
+    ) {
       content = JSON.parse(content);
+    }
 
     return {
+      urls: url === resp.url ? [url] : [url, resp.url],
       status: resp.status,
       headers: resp.headers.raw(),
       content,
@@ -194,10 +197,13 @@ export default class Fetch {
         params = { method: 'GET' };
       }
 
-      return { urls: manuallyFollowedUrls, ...currResp };
-    } else {
-      return await this.requestWithHeaders(url, params);
+      if (currResp.urls[currResp.urls.length - 1] !== manuallyFollowedUrls[manuallyFollowedUrls.length - 1])
+        manuallyFollowedUrls.push(currResp.urls[currResp.urls.length - 1]);
+
+      return { ...currResp, urls: manuallyFollowedUrls };
     }
+
+    return await this.requestWithHeaders(url, params);
   }
 
   async request(url: string, params: AdvancedFetchRequestParams = {}): Promise<any> {
