@@ -40,6 +40,7 @@ class Fetch {
         this.initialized = true;
     }
     async requestWithHeaders(url, params = {}) {
+        var _a;
         await this.initialize();
         // process GET query string
         let queryStr = '';
@@ -92,9 +93,14 @@ class Fetch {
         await this.storeCookies();
         // if an encoding was given in the Fetch constructur, the response still needs to be converted from that to UTF-8
         let encoding = params.encoding || this.options.encoding;
-        let content = await (params.returnBuffer || encoding ? resp.buffer() : resp.text());
-        if (!params.returnBuffer && encoding)
+        let content = await (params.returnType === 'buffer' || encoding ? resp.buffer() : resp.text());
+        if (params.returnType !== 'buffer' && encoding)
             content = iconv_lite_1.default.decode(content, encoding);
+        if (params.returnType === 'json' ||
+            (((_a = resp.headers.get('content-type')) === null || _a === void 0 ? void 0 : _a.startsWith('application/json')) &&
+                params.returnType !== 'buffer' &&
+                params.returnType !== 'string'))
+            content = JSON.parse(content);
         return {
             status: resp.status,
             headers: resp.headers.raw(),
@@ -102,34 +108,36 @@ class Fetch {
         };
     }
     async requestWithFullResponse(url, params = {}) {
-        // only let node-fetch follow redirects if that's explicitly stated
-        if (params.redirect === 'follow')
-            return await this.requestWithHeaders(url, params);
-        // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
-        let nextUrl = url;
-        let currOrigin = new URL(url).origin;
-        let currResp;
-        const manuallyFollowedUrls = [url];
-        params = { ...params, redirect: 'manual' };
-        while (true) {
-            currResp = await this.requestWithHeaders(nextUrl, params);
-            if (currResp.status < 300 || currResp.status >= 400)
-                break;
-            else if (currResp.status !== 301 && currResp.status !== 302)
-                throw new Error('unknown HTTP redirect status: ' + currResp.status);
-            const loc = currResp.headers.location;
-            if (!loc || (Array.isArray(loc) && loc.length !== 1))
-                break;
-            nextUrl = Array.isArray(loc) ? loc[0] : loc;
-            // make sure nextUrl is absolute (if it is, set is as the new origin, otherwise use the same origin like before)
-            if (nextUrl.startsWith('/'))
-                nextUrl = currOrigin + nextUrl;
-            else
-                currOrigin = new URL(nextUrl).origin;
-            manuallyFollowedUrls.push(nextUrl);
-            params = { method: 'GET' };
+        if (!params.redirect || params.redirect === 'followWithCookies') {
+            // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
+            let nextUrl = url;
+            let currOrigin = new URL(url).origin;
+            let currResp;
+            const manuallyFollowedUrls = [url];
+            params = { ...params, redirect: 'manual' };
+            while (true) {
+                currResp = await this.requestWithHeaders(nextUrl, params);
+                if (currResp.status < 300 || currResp.status >= 400)
+                    break;
+                else if (currResp.status !== 301 && currResp.status !== 302)
+                    throw new Error('unknown HTTP redirect status: ' + currResp.status);
+                const loc = currResp.headers.location;
+                if (!loc || (Array.isArray(loc) && loc.length !== 1))
+                    break;
+                nextUrl = Array.isArray(loc) ? loc[0] : loc;
+                // make sure nextUrl is absolute (if it is, set is as the new origin, otherwise use the same origin like before)
+                if (nextUrl.startsWith('/'))
+                    nextUrl = currOrigin + nextUrl;
+                else
+                    currOrigin = new URL(nextUrl).origin;
+                manuallyFollowedUrls.push(nextUrl);
+                params = { method: 'GET' };
+            }
+            return { urls: manuallyFollowedUrls, ...currResp };
         }
-        return { urls: manuallyFollowedUrls, ...currResp };
+        else {
+            return await this.requestWithHeaders(url, params);
+        }
     }
     async request(url, params = {}) {
         return (await this.requestWithFullResponse(url, params)).content;

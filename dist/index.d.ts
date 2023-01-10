@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import FormData from 'form-data';
 interface FetchOptions {
     cookiesFilename?: string;
@@ -10,6 +9,7 @@ type FormDataValue = string | string[] | {
     value: any;
     options: FormData.AppendOptions | string;
 };
+type RequestReturnType = 'string' | 'json' | 'buffer';
 interface AdvancedFetchRequestParams {
     headers?: {
         [key: string]: string;
@@ -25,8 +25,8 @@ interface AdvancedFetchRequestParams {
     };
     json?: any;
     encoding?: string;
-    returnBuffer?: boolean;
-    redirect?: 'follow' | 'manual';
+    returnType?: RequestReturnType;
+    redirect?: RequestRedirect | 'followWithCookies';
     method?: string;
 }
 interface AdvancedFetchResponse {
@@ -35,7 +35,7 @@ interface AdvancedFetchResponse {
     headers: {
         [key: string]: string;
     };
-    content: string | Buffer;
+    content: any;
 }
 export default class Fetch {
     private options;
@@ -46,11 +46,11 @@ export default class Fetch {
     private initialize;
     requestWithHeaders(url: string, params?: AdvancedFetchRequestParams): Promise<AdvancedFetchResponse>;
     requestWithFullResponse(url: string, params?: AdvancedFetchRequestParams): Promise<AdvancedFetchResponse>;
-    request(url: string, params?: AdvancedFetchRequestParams): Promise<string | Buffer>;
-    get(url: string, params?: AdvancedFetchRequestParams): Promise<string | Buffer>;
-    post(url: string, params?: AdvancedFetchRequestParams): Promise<string | Buffer>;
-    put(url: string, params?: AdvancedFetchRequestParams): Promise<string | Buffer>;
-    delete(url: string, params?: AdvancedFetchRequestParams): Promise<string | Buffer>;
+    request(url: string, params?: AdvancedFetchRequestParams): Promise<any>;
+    get(url: string, params?: AdvancedFetchRequestParams): Promise<any>;
+    post(url: string, params?: AdvancedFetchRequestParams): Promise<any>;
+    put(url: string, params?: AdvancedFetchRequestParams): Promise<any>;
+    delete(url: string, params?: AdvancedFetchRequestParams): Promise<any>;
     storeCookies(): Promise<void>;
     getCookie(key: string): Promise<string | undefined>;
 }
