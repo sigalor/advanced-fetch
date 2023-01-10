@@ -1,3 +1,8 @@
+# 3.1.0 (2023-01-10)
+
+- do not use any default redirect mode anymore, i.e. use the default behavior of node-fetch in case nothing else is mentioned
+- `AdvancedFetchResponse.urls` is not optional anymore
+
 # 3.0.0 (2023-01-10)
 
 - upgrade to node-fetch@3 via [node-fetch-commonjs](https://www.npmjs.com/package/node-fetch-commonjs)
