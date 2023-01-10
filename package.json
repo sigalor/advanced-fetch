@@ -1,6 +1,6 @@
 {
   "name": "advanced-fetch",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A version of node-fetch with more convenient functionality.",
   "main": "dist/index.js",
   "repository": {
