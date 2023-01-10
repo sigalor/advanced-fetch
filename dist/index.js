@@ -108,6 +108,7 @@ class Fetch {
         // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
         let nextUrl = url;
         let currResp;
+        const manuallyFollowedUrls = [url];
         params = { ...params, redirect: 'manual' };
         while (true) {
             currResp = await this.requestWithHeaders(nextUrl, params);
@@ -119,9 +120,10 @@ class Fetch {
             if (!loc || (Array.isArray(loc) && loc.length !== 1))
                 break;
             nextUrl = Array.isArray(loc) ? loc[0] : loc;
+            manuallyFollowedUrls.push(nextUrl);
             params = { method: 'GET' };
         }
-        return currResp;
+        return { urls: manuallyFollowedUrls, ...currResp };
     }
     async request(url, params = {}) {
         return (await this.requestWithFullResponse(url, params)).content;

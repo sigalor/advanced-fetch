@@ -6,7 +6,7 @@ interface FetchOptions {
     commonFetchParams?: any;
     ignoreInvalidHttps?: boolean;
 }
-declare type FormDataValue = string | string[] | {
+type FormDataValue = string | string[] | {
     value: any;
     options: FormData.AppendOptions | string;
 };
@@ -30,6 +30,7 @@ interface AdvancedFetchRequestParams {
     method?: string;
 }
 interface AdvancedFetchResponse {
+    urls?: string[];
     status: number;
     headers: {
         [key: string]: string;
