@@ -33,6 +33,8 @@ interface FetchOptions {
 
 type FormDataValue = string | string[] | { value: any; options: FormData.AppendOptions | string };
 
+type RequestReturnType = 'string' | 'json' | 'buffer';
+
 interface AdvancedFetchRequestParams {
   // HTTP headers
   headers?: { [key: string]: string };
@@ -52,12 +54,13 @@ interface AdvancedFetchRequestParams {
   // encoding from which the response should be converted to UTF-8
   encoding?: string;
 
-  // whether a Buffer instead of a string should be returned
-  returnBuffer?: boolean;
+  // whether a string (which is the default), parsed JSON (which is the actual default when
+  // the response's Content-Type is application/json) or a Buffer should be returned
+  returnType?: RequestReturnType;
 
-  // if this is set to "follow", then node-fetch will follow redirects automatically
-  // otherwise follow them manually (which is the default), because then Set-Cookie is respected for redirecting sites
-  redirect?: 'follow' | 'manual';
+  // the default is "followWithCookies", because only then Set-Cookie is respected for redirecting sites
+  // otherwise the desired regular node-fetch redirect behavior is used
+  redirect?: RequestRedirect | 'followWithCookies';
 
   // HTTP method
   method?: string;
@@ -70,7 +73,7 @@ interface AdvancedFetchResponse {
   // when following redirects, the following properties only refer to the last, final response
   status: number;
   headers: { [key: string]: string };
-  content: string | Buffer;
+  content: any;
 }
 
 export default class Fetch {
@@ -148,8 +151,15 @@ export default class Fetch {
 
     // if an encoding was given in the Fetch constructur, the response still needs to be converted from that to UTF-8
     let encoding = params.encoding || this.options.encoding;
-    let content = await (params.returnBuffer || encoding ? resp.buffer() : resp.text());
-    if (!params.returnBuffer && encoding) content = iconv.decode(content, encoding);
+    let content = await (params.returnType === 'buffer' || encoding ? resp.buffer() : resp.text());
+    if (params.returnType !== 'buffer' && encoding) content = iconv.decode(content, encoding);
+    if (
+      params.returnType === 'json' ||
+      (resp.headers.get('content-type')?.startsWith('application/json') &&
+        params.returnType !== 'buffer' &&
+        params.returnType !== 'string')
+    )
+      content = JSON.parse(content);
 
     return {
       status: resp.status,
@@ -159,53 +169,54 @@ export default class Fetch {
   }
 
   async requestWithFullResponse(url: string, params: AdvancedFetchRequestParams = {}): Promise<AdvancedFetchResponse> {
-    // only let node-fetch follow redirects if that's explicitly stated
-    if (params.redirect === 'follow') return await this.requestWithHeaders(url, params);
+    if (!params.redirect || params.redirect === 'followWithCookies') {
+      // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
+      let nextUrl = url;
+      let currOrigin = new URL(url).origin;
+      let currResp: AdvancedFetchResponse;
+      const manuallyFollowedUrls = [url];
+      params = { ...params, redirect: 'manual' };
+      while (true) {
+        currResp = await this.requestWithHeaders(nextUrl, params);
+        if (currResp.status < 300 || currResp.status >= 400) break;
+        else if (currResp.status !== 301 && currResp.status !== 302)
+          throw new Error('unknown HTTP redirect status: ' + currResp.status);
 
-    // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
-    let nextUrl = url;
-    let currOrigin = new URL(url).origin;
-    let currResp: AdvancedFetchResponse;
-    const manuallyFollowedUrls = [url];
-    params = { ...params, redirect: 'manual' };
-    while (true) {
-      currResp = await this.requestWithHeaders(nextUrl, params);
-      if (currResp.status < 300 || currResp.status >= 400) break;
-      else if (currResp.status !== 301 && currResp.status !== 302)
-        throw new Error('unknown HTTP redirect status: ' + currResp.status);
+        const loc = currResp.headers.location;
+        if (!loc || (Array.isArray(loc) && loc.length !== 1)) break;
+        nextUrl = Array.isArray(loc) ? loc[0] : loc;
 
-      const loc = currResp.headers.location;
-      if (!loc || (Array.isArray(loc) && loc.length !== 1)) break;
-      nextUrl = Array.isArray(loc) ? loc[0] : loc;
+        // make sure nextUrl is absolute (if it is, set is as the new origin, otherwise use the same origin like before)
+        if (nextUrl.startsWith('/')) nextUrl = currOrigin + nextUrl;
+        else currOrigin = new URL(nextUrl).origin;
 
-      // make sure nextUrl is absolute (if it is, set is as the new origin, otherwise use the same origin like before)
-      if (nextUrl.startsWith('/')) nextUrl = currOrigin + nextUrl;
-      else currOrigin = new URL(nextUrl).origin;
+        manuallyFollowedUrls.push(nextUrl);
+        params = { method: 'GET' };
+      }
 
-      manuallyFollowedUrls.push(nextUrl);
-      params = { method: 'GET' };
+      return { urls: manuallyFollowedUrls, ...currResp };
+    } else {
+      return await this.requestWithHeaders(url, params);
     }
-
-    return { urls: manuallyFollowedUrls, ...currResp };
   }
 
-  async request(url: string, params: AdvancedFetchRequestParams = {}): Promise<string | Buffer> {
+  async request(url: string, params: AdvancedFetchRequestParams = {}): Promise<any> {
     return (await this.requestWithFullResponse(url, params)).content;
   }
 
-  get(url: string, params: AdvancedFetchRequestParams = {}): Promise<string | Buffer> {
+  get(url: string, params: AdvancedFetchRequestParams = {}): Promise<any> {
     return this.request(url, { ...params, method: 'GET' });
   }
 
-  post(url: string, params: AdvancedFetchRequestParams = {}): Promise<string | Buffer> {
+  post(url: string, params: AdvancedFetchRequestParams = {}): Promise<any> {
     return this.request(url, { ...params, method: 'POST' });
   }
 
-  put(url: string, params: AdvancedFetchRequestParams = {}): Promise<string | Buffer> {
+  put(url: string, params: AdvancedFetchRequestParams = {}): Promise<any> {
     return this.request(url, { ...params, method: 'PUT' });
   }
 
-  delete(url: string, params: AdvancedFetchRequestParams = {}): Promise<string | Buffer> {
+  delete(url: string, params: AdvancedFetchRequestParams = {}): Promise<any> {
     return this.request(url, { ...params, method: 'DELETE' });
   }
 
