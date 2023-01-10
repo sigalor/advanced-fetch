@@ -1,3 +1,7 @@
+# 2.1.0 (2023-01-10)
+
+- update NPM dependencies
+
 # 2.0.0 (2022-09-02)
 
 - fix array form parameters and encoding handling
