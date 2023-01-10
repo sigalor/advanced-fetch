@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const util_1 = __importDefault(require("util"));
 const fs_extra_1 = __importDefault(require("fs-extra"));
-const node_fetch_1 = __importDefault(require("node-fetch"));
+const node_fetch_commonjs_1 = __importDefault(require("node-fetch-commonjs"));
 const tough_cookie_1 = require("tough-cookie");
 const fetch_cookie_1 = __importDefault(require("fetch-cookie"));
 const form_data_1 = __importDefault(require("form-data"));
@@ -36,7 +36,7 @@ class Fetch {
             this.jar = promisifyCookieJar(await tough_cookie_1.CookieJar.deserialize(await fs_extra_1.default.readJSON(this.options.cookiesFilename)));
         else
             this.jar = promisifyCookieJar(new tough_cookie_1.CookieJar());
-        this.fetch = (0, fetch_cookie_1.default)(node_fetch_1.default, this.jar);
+        this.fetch = (0, fetch_cookie_1.default)(node_fetch_commonjs_1.default, this.jar);
         this.initialized = true;
     }
     async requestWithHeaders(url, params = {}) {
@@ -107,6 +107,7 @@ class Fetch {
             return await this.requestWithHeaders(url, params);
         // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
         let nextUrl = url;
+        let currOrigin = new URL(url).origin;
         let currResp;
         const manuallyFollowedUrls = [url];
         params = { ...params, redirect: 'manual' };
@@ -120,6 +121,11 @@ class Fetch {
             if (!loc || (Array.isArray(loc) && loc.length !== 1))
                 break;
             nextUrl = Array.isArray(loc) ? loc[0] : loc;
+            // make sure nextUrl is absolute (if it is, set is as the new origin, otherwise use the same origin like before)
+            if (nextUrl.startsWith('/'))
+                nextUrl = currOrigin + nextUrl;
+            else
+                currOrigin = new URL(nextUrl).origin;
             manuallyFollowedUrls.push(nextUrl);
             params = { method: 'GET' };
         }
