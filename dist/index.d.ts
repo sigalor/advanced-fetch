@@ -1,16 +1,16 @@
 import FormData from 'form-data';
-interface FetchOptions {
+export interface FetchOptions {
     cookiesFilename?: string;
     encoding?: string;
     commonFetchParams?: any;
     ignoreInvalidHttps?: boolean;
 }
-type FormDataValue = string | string[] | {
+export type FormDataValue = string | string[] | {
     value: any;
     options: FormData.AppendOptions | string;
 };
-type RequestReturnType = 'string' | 'json' | 'buffer';
-interface AdvancedFetchRequestParams {
+export type RequestReturnType = 'string' | 'json' | 'buffer';
+export interface AdvancedFetchRequestParams {
     headers?: {
         [key: string]: string;
     };
@@ -29,7 +29,7 @@ interface AdvancedFetchRequestParams {
     redirect?: RequestRedirect | 'followWithCookies';
     method?: string;
 }
-interface AdvancedFetchResponse {
+export interface AdvancedFetchResponse {
     urls: string[];
     status: number;
     headers: {
@@ -54,4 +54,3 @@ export default class Fetch {
     storeCookies(): Promise<void>;
     getCookie(key: string): Promise<string | undefined>;
 }
-export {};

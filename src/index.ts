@@ -16,7 +16,7 @@ function promisifyCookieJar(jar: CookieJar): CookieJar {
   return jar;
 }
 
-interface FetchOptions {
+export interface FetchOptions {
   // cookies can be stored in this file using the `storeCookies` function in the format of `tough-cookie`
   // also, when this filename is given, cookies will be loaded from this file in the first request
   cookiesFilename?: string;
@@ -31,11 +31,11 @@ interface FetchOptions {
   ignoreInvalidHttps?: boolean;
 }
 
-type FormDataValue = string | string[] | { value: any; options: FormData.AppendOptions | string };
+export type FormDataValue = string | string[] | { value: any; options: FormData.AppendOptions | string };
 
-type RequestReturnType = 'string' | 'json' | 'buffer';
+export type RequestReturnType = 'string' | 'json' | 'buffer';
 
-interface AdvancedFetchRequestParams {
+export interface AdvancedFetchRequestParams {
   // HTTP headers
   headers?: { [key: string]: string };
 
@@ -66,7 +66,7 @@ interface AdvancedFetchRequestParams {
   method?: string;
 }
 
-interface AdvancedFetchResponse {
+export interface AdvancedFetchResponse {
   // list of URLs that were followed to get to this response (only set when params.redirect was "manual") with the one of the final response last
   // otherwise, this contains either one URL (if no redirects were followed) or two URLs (if a redirect was followed)
   urls: string[];
