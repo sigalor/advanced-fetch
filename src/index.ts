@@ -172,8 +172,8 @@ export default class Fetch {
   }
 
   async requestWithFullResponse(url: string, params: AdvancedFetchRequestParams = {}): Promise<AdvancedFetchResponse> {
-    if (!params.redirect || params.redirect === 'followWithCookies') {
-      // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
+    if (params.redirect === 'followWithCookies') {
+      // otherwise follow them manually, in order to also save the cookies set via Set-Cookie by intermediate redirects in the cookie jar
       let nextUrl = url;
       let currOrigin = new URL(url).origin;
       let currResp: AdvancedFetchResponse;
