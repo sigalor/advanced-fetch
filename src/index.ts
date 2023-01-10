@@ -56,7 +56,7 @@ interface AdvancedFetchRequestParams {
   returnBuffer?: boolean;
 
   // if this is set to "follow", then node-fetch will follow redirects automatically
-  // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
+  // otherwise follow them manually (which is the default), because then Set-Cookie is respected for redirecting sites
   redirect?: 'follow' | 'manual';
 
   // HTTP method
@@ -64,6 +64,10 @@ interface AdvancedFetchRequestParams {
 }
 
 interface AdvancedFetchResponse {
+  // list of URLs that were followed to get to this response (only set when params.redirect was "manual") with the one of the final response last
+  urls?: string[];
+
+  // when following redirects, the following properties only refer to the last, final response
   status: number;
   headers: { [key: string]: string };
   content: string | Buffer;
@@ -161,6 +165,7 @@ export default class Fetch {
     // otherwise follow them manually, because otherwise Set-Cookie is ignored for redirecting sites
     let nextUrl = url;
     let currResp: AdvancedFetchResponse;
+    const manuallyFollowedUrls = [url];
     params = { ...params, redirect: 'manual' };
     while (true) {
       currResp = await this.requestWithHeaders(nextUrl, params);
@@ -171,10 +176,11 @@ export default class Fetch {
       const loc = currResp.headers.location;
       if (!loc || (Array.isArray(loc) && loc.length !== 1)) break;
       nextUrl = Array.isArray(loc) ? loc[0] : loc;
+      manuallyFollowedUrls.push(nextUrl);
       params = { method: 'GET' };
     }
 
-    return currResp;
+    return { urls: manuallyFollowedUrls, ...currResp };
   }
 
   async request(url: string, params: AdvancedFetchRequestParams = {}): Promise<string | Buffer> {
