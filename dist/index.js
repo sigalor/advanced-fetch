@@ -46,7 +46,7 @@ class Fetch {
         let queryStr = '';
         if (params.query) {
             if (Object.keys(params.query).length > 0)
-                queryStr = '&' + new url_1.URLSearchParams(params.query).toString();
+                queryStr = (url.includes('?') ? '&' : '?') + new url_1.URLSearchParams(params.query).toString();
             delete params.query;
         }
         // make sure headers object exists

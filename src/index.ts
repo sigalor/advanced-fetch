@@ -109,7 +109,8 @@ export default class Fetch {
     // process GET query string
     let queryStr = '';
     if (params.query) {
-      if (Object.keys(params.query).length > 0) queryStr = '&' + new URLSearchParams(params.query).toString();
+      if (Object.keys(params.query).length > 0)
+        queryStr = (url.includes('?') ? '&' : '?') + new URLSearchParams(params.query).toString();
       delete params.query;
     }
 
