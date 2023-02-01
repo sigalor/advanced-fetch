@@ -59,5 +59,18 @@ describe('advanced-fetch', () => {
     expect(response.mycookie).toBe('secret');
   });
 
+  test('correctly handles a query parameter', async () => {
+    const fetch = new Fetch();
+    const response = await fetch.get(`${baseUrl}/get-query`, { query: { hello: 'world' } });
+    expect(response.hello).toBe('world');
+  });
+
+  test('correctly handles a query parameter appended to one already in the URL', async () => {
+    const fetch = new Fetch();
+    const response = await fetch.get(`${baseUrl}/get-query?hello=world`, { query: { foo: 'bar' } });
+    expect(response.hello).toBe('world');
+    expect(response.foo).toBe('bar');
+  });
+
   // TODO: add many more unit tests for cookies, encoding, etc.
 });

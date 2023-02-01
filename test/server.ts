@@ -39,6 +39,10 @@ app.get('/get-cookies', (req, res) => {
   res.json(req.cookies);
 });
 
+app.get('/get-query', (req, res) => {
+  res.json(req.query);
+});
+
 export async function startServer(port: number): Promise<void> {
   return new Promise(resolve => {
     if (server) {
