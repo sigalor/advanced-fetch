@@ -1,3 +1,7 @@
+# 3.1.2 (2023-02-01)
+
+- fix: handling of query parameter separator
+
 # 3.1.1 (2023-01-10)
 
 - also export all types and interfaces for TypeScript
